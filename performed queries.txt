@@ -1,0 +1,171 @@
+1 select * from public.employe_trns
+join current_project_mst on 
+current_project_mst.id=employe_trns.id
+where current_project_mst.name ='BRO';
+
+
+2 select * from public.employe_trns
+join current_project_mst on 
+current_project_mst.id=employe_trns.id
+where current_project_mst.name not in ('EME');
+
+3 select * from employe_trns
+where extract ( year from age (current_date,join_date))=0
+order by join_date desc;
+
+4 select * from public.employe_trns where cast(salary as integer)<=20000;
+
+5 select * from public.employe_trns where cast(salary as integer)>=20000;
+
+6 select * from public.employe_trns where cast(salary as integer) between 10000 and 50000;
+
+7 select min(salary) from employe_trns;
+
+8 select max(salary) from employe_trns;
+
+9 select AVG (salary)from employe_trns;
+
+11 select * from employe_trns
+where extract (month from (join_date))='3';
+
+12 select * from employe_trns
+where extract (year from (join_date))='2021';
+
+13 select * from employe_trns
+join city_mst on 
+city_mst.id=employe_trns.id
+where city_mst.name='gandhinagar';
+
+14 select * from employe_trns
+join city_mst on 
+city_mst.id=employe_trns.id
+where city_mst.name not in ('gandhinagar');
+
+15 select * from employe_trns
+join qualification_mst on
+qualification_mst.id=employe_trns.id
+where qualification_mst.graduation='BTECH';
+
+16 select count(emp.current_project_id) as project_number, pn.id
+from employe_trns emp
+join project_new_mst pn on emp.current_project_id=pn.id
+group by pn.id
+having count(pn.id)<5;
+
+18 select * from employe_trns
+where length(name)>5;
+
+19 select * from employe_trns
+where length(name)>4 and employe_trns.name like 's%';
+
+20 select * from employe_trns
+where length(name)=5 and employe_trns.name like '_a%r';
+
+
+21 select * from designation_mst as des
+join employe_trns as emp on
+emp.id=des.id
+where des.name='sd'
+order by emp.id asc;
+
+22
+select employe_trns.salary, employe_trns.name,
+(EXTRACT(YEAR From(now())) - EXTRACT(YEAR From(join_date)))as experience,
+(EXTRACT(YEAR From(now())) - EXTRACT(YEAR From(d_o_b)))as age
+from employe_trns
+join organi_mst as org on employe_trns.org_id=org.id
+where (EXTRACT(YEAR From(now())) - EXTRACT(YEAR From(join_date)))>2 and org.name='ethos' or org.name = 'bisag-n';
+
+23
+select e.name from employe_trns e
+where upper(e.name) like 'S%' or upper(e.name) like 'M%' or upper(e.name) like 'H%' and upper(e.name) like '%R' or upper(e.name) like '%H' or upper(e.name) like '%T'
+order by e.name desc;
+
+24 select pr.name as project_name , count(pm.id) as team_size from (select pr.id,count(*)
+from project_new_mst pr 
+group by pr.id) t
+inner join  project_assign_trns pm on t.id = pm.id
+inner join project_new_mst pr on pr.id = pm.id
+group by pr.name , pm.id;
+
+
+25
+
+select pr.name as project_name ,
+count(pm.id) as team_size ,emp.name as team_leaders from (select pr.id,count(*)
+from project_new_mst pr 
+group by pr.id) t
+inner join project_assign_trns pm on t.id = pm.id
+inner join project_new_mst pr on pr.id = pm.id
+join employe_trns as emp on emp.id = pm.emp_id
+join designation_mst as dt on dt.id= emp.id
+where dt.name = 'sd'
+group by pr.name , pm.id, emp.name
+
+
+26 select emp.name as team_leader_name,
+(EXTRACT(YEAR From(now())) - EXTRACT(YEAR From(d_o_b)))
+as age,ot.name as organisation, emp.salary as salary
+,(EXTRACT(YEAR From(now())) - EXTRACT(YEAR From(join_date)))as experience 
+from employe_trns as emp
+join designation_mst as dt on dt.id=emp.id
+join organi_mst as ot on ot.id = emp.id
+inner join project_assign_trns pm on pm.id=emp.id
+inner join project_new_mst pr on pr.id= pm.id
+where dt.name = 'tl'
+and (select count(pr.id) from project_new_mst as pr) >1 ;
+
+
+27 select * from employe_trns as emp
+where(extract(year from (now())) - extract(year from(emp.join_date)))<1;
+
+
+28 select * from employe_trns as emp
+join qualification_mst as q on q.id=emp.qualification_id
+where
+q.graduation in ('MTECH') and 
+extract(year from(now())) - extract(year from(d_o_b))>25;
+
+
+30
+
+select e.name,
+		d.name as designame,
+		pm.name as projectname
+from employe_trns e
+inner JOIN project_assign_trns pa on e.id=pa.emp_id
+inner JOIN current_project_mst pm on pa.id=pm.id
+inner join designation_mst d on e.id = d.id
+where e.id in (select e.id from project_assign_trns group by e.id
+having count(distinct id) > 1)
+order by pm.name
+
+
+
+31
+
+
+select name,
+age(CURRENT_DATE, join_date) as Experience,
+(case
+ 	when qualification_id = 4 and Experience > 8 then 'Project Manager' 
+ 	when qualification_id in (4,3) and Experience > 6 then 'Technical head'
+ 	when qualification_id in (4,3,2,1) and Experience >=2 and Experience <=6 then 'Team Leaders'
+	when qualification_id in (4,3,2,1) and Experience >=1 and Experience <=2 then 'Developers'
+ 	when qualification_id in (3,2,1) and Experience < 1 then 'Junior Developers'
+    when qualification_id = 5 and Experience > 3 then 'Network Group'
+else 'Other' end ) as Designation
+from (select e.join_date,e.qualification_id,e.name,extract(year from age(CURRENT_DATE, e.join_date)) as Experience
+	 from employe_trns e ) as foo
+where Experience is not null
+order by Designation
+
+
+16 only gives BRO project employee name,id,project number
+
+select count(emp.current_project_id) as project_number, pn.name , pn.id , emp.name
+from employe_trns emp
+join project_new_mst pn on emp.current_project_id=pn.id
+where pn.name='BRO'
+group by pn.id,emp.name
+having count(pn.id)<5;
